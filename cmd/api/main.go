@@ -29,10 +29,13 @@ func main() {
 
 	// routes
 	routes.AuthRoute(app.Group("/auth"))
-	routes.ProductRoute(app.Group("/product", middleware.Authenticated))
+	routes.ProductRoute(app.Group("/product"))
 
 	app.Get("/", welcomeToApi)
 	app.Use(notFound)
+
+	// seed data
+	util.SeedData()
 
 	port := util.MyCmpWorkAround(os.Getenv("PORT"), "8000")
 	host := util.MyCmpWorkAround(os.Getenv("HOST"), "")

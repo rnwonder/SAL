@@ -4,28 +4,68 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/rnwonder/SAL/data"
+	"github.com/rnwonder/SAL/internals/middleware"
 	"github.com/rnwonder/SAL/util"
 	"github.com/rnwonder/SAL/validators"
+	"sort"
+	"strings"
 	"time"
 )
 
 func ProductRoute(router fiber.Router) {
 	router.Get("/", getAllProducts)
-	router.Post("/", createAProduct)
+	router.Post("/", middleware.Authenticated, createAProduct)
 	router.Get("/:id", findAProduct)
-	router.Put("/:id", updateAProduct)
-	router.Delete("/:id", deleteAProduct)
+	router.Put("/:id", middleware.Authenticated, updateAProduct)
+	router.Delete("/:id", middleware.Authenticated, deleteAProduct)
 }
 
 func getAllProducts(ctx *fiber.Ctx) error {
-	page := ctx.Query("page")
-	limit := ctx.Query("limit")
-
 	var products []data.ProductResponse
+	key := util.MyCmpWorkAround(ctx.Query("sortKey"), "createdAt")
+	order := util.MyCmpWorkAround(ctx.Query("sortOrder"), "desc")
+	searchQuery := ctx.Query("search")
 
-	startIndex, endIndex, totalPages := util.CalculatePageInfo(page, limit, len(data.ProductData))
+	// Sorting
+	sort.Slice(data.ProductData, func(i, j int) bool {
+		switch key {
+		case "name":
+			if order == "asc" {
+				return data.ProductData[i].Name < data.ProductData[j].Name
+			} else {
+				return data.ProductData[i].Name > data.ProductData[j].Name
+			}
+		case "price":
+			if order == "asc" {
+				return data.ProductData[i].Price < data.ProductData[j].Price
+			} else {
+				return data.ProductData[i].Price > data.ProductData[j].Price
+			}
+		case "createdAt":
+			if order == "asc" {
+				return data.ProductData[i].CreatedAt.Before(data.ProductData[j].CreatedAt)
+			} else {
+				return data.ProductData[i].CreatedAt.After(data.ProductData[j].CreatedAt)
+			}
+		default:
+			return i < j
+		}
+	})
 
-	for i, product := range data.ProductData[startIndex:endIndex] {
+	// Filtering by search query
+	filteredData := data.ProductData
+	if searchQuery != "" {
+		filteredData = []data.Product{}
+		for _, product := range data.ProductData {
+			if strings.Contains(strings.ToLower(product.Name), strings.ToLower(searchQuery)) {
+				filteredData = append(filteredData, product)
+			}
+		}
+	}
+
+	startIndex, endIndex, totalPages, limit, page := util.CalculatePageInfo(ctx.Query("page"), ctx.Query("limit"), len(filteredData))
+
+	for i, product := range filteredData[startIndex:endIndex] {
 		products = append(products, util.ClientProductFormat(product))
 		if i == endIndex {
 			break
@@ -36,11 +76,12 @@ func getAllProducts(ctx *fiber.Ctx) error {
 		"message":  "Products fetched successfully",
 		"products": products,
 		"meta": fiber.Map{
-			"currentPage": page,
-			"limit":       limit,
-			"totalPages":  totalPages,
-			"nextPage":    "/products?page=" + util.NextPage(page, totalPages),
-			"prevPage":    "/products?page=" + util.PrevPage(page),
+			"currentPage":   page,
+			"limit":         limit,
+			"totalPages":    totalPages,
+			"nextPage":      "/products?page=" + util.NextPage(page, totalPages),
+			"prevPage":      "/products?page=" + util.PrevPage(page),
+			"totalProducts": len(filteredData),
 		},
 	})
 }
