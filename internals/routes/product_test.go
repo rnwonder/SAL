@@ -126,9 +126,9 @@ func Test_findAProduct(t *testing.T) {
 			expectedCode: 200,
 			contains: []string{
 				`"message":"Product fetched successfully"`,
-				`"Name":"A product"`,
-				`"Price":100`,
-				`"Description":"A product description"`,
+				`"name":"A product"`,
+				`"price":100`,
+				`"description":"A product description"`,
 			},
 		},
 	}
@@ -211,9 +211,9 @@ func Test_createAProduct(t *testing.T) {
 			expectedCode: 201,
 			contains: []string{
 				`"message":"Product created successfully"`,
-				`"Name":"A product2"`,
-				`"Price":100`,
-				`"Description":"A product description"`,
+				`"name":"A product2"`,
+				`"price":100`,
+				`"description":"A product description"`,
 			},
 			body: map[string]interface{}{
 				"Name":        "A product2",
@@ -536,7 +536,7 @@ func Test_updateAProduct(t *testing.T) {
 			expectedCode: 200,
 			contains: []string{
 				`"message":"Product updated successfully"`,
-				`"Name":"A product2"`,
+				`"name":"A product2"`,
 			},
 			body: map[string]interface{}{
 				"Name": "A product2",

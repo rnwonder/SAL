@@ -183,7 +183,7 @@ func EncodeMapToString(data map[string]interface{}) string {
 	return values.Encode()
 }
 
-func StructToMap(s interface{}) map[string]interface{} {
+func KeysToLowerCase(s interface{}) map[string]interface{} {
 	m := make(map[string]interface{})
 	val := reflect.ValueOf(s)
 	if val.Kind() == reflect.Ptr {
@@ -196,6 +196,10 @@ func StructToMap(s interface{}) map[string]interface{} {
 		key := typ.Field(i).Name
 		// Convert key to lowercase
 		lowerKey := string([]rune(key)[0]+32) + key[1:]
+
+		if lowerKey == "password" {
+			continue
+		}
 		m[lowerKey] = field.Interface()
 	}
 	return m

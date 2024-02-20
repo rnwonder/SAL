@@ -10,7 +10,7 @@ This is the API for the ShopAnythingLagos project. It is a RESTful API built wit
 ## Prerequisites
 
 - Postman or any other API testing tool
-- Download the postman collection [here](https://somelink.com)
+- Download the postman collection [here](https://res.cloudinary.com/dfbebf7x0/raw/upload/v1708439359/SAL.postman_collection_o0m8ff.json)
 
 ## Endpoints
 
