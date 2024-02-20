@@ -3,18 +3,9 @@ package middleware
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/rnwonder/SAL/internals/handlers"
 	"strings"
 )
-
-func CreateSession(ctx *fiber.Ctx) error {
-	store := session.New(session.Config{
-		CookieHTTPOnly: true,
-	})
-	ctx.Locals("session", store)
-	return ctx.Next()
-}
 
 func Authenticated(ctx *fiber.Ctx) error {
 	var token string

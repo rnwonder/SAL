@@ -1,6 +1,7 @@
 package util
 
 import (
+	"cmp"
 	"fmt"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2/log"
@@ -14,15 +15,6 @@ import (
 	"time"
 )
 
-func JsonStringify(data map[string]interface{}) string {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		log.Error("Error converting data to json", err)
-		return ""
-	}
-	return string(jsonData)
-}
-
 func JsonParse(jsonString string) map[string]interface{} {
 	var data map[string]interface{}
 
@@ -32,14 +24,6 @@ func JsonParse(jsonString string) map[string]interface{} {
 		return make(map[string]interface{})
 	}
 	return data
-}
-
-func MyCmpWorkAround(value1 string, value2 string) string {
-	// This is a work around for the cmp package breaking in 1.21.6
-	if value1 == "" {
-		return value2
-	}
-	return value1
 }
 
 func HashPassword(password string) string {
@@ -60,8 +44,8 @@ func CompareHashAndPassword(hash string, password string) bool {
 }
 
 func CalculatePageInfo(page string, limit string, total int) (int, int, int, int, int) {
-	pageString := MyCmpWorkAround(page, "1")
-	limitString := MyCmpWorkAround(limit, "10")
+	pageString := cmp.Or(page, "1")
+	limitString := cmp.Or(limit, "10")
 	pageInt, _ := strconv.Atoi(pageString)
 	limitInt, _ := strconv.Atoi(limitString)
 	startIndex := (pageInt - 1) * limitInt

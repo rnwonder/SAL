@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"cmp"
 	"errors"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rnwonder/SAL/data"
-	"github.com/rnwonder/SAL/util"
 	"os"
 	"time"
 )
@@ -16,7 +16,7 @@ func SignDataWithJWT(data *data.Merchant) (string, time.Time) {
 		t   *jwt.Token
 	)
 
-	secret := util.MyCmpWorkAround(os.Getenv("JWT_SECRET"), "some-secret")
+	secret := cmp.Or(os.Getenv("JWT_SECRET"), "some-secret")
 
 	key = []byte(secret)
 
@@ -49,7 +49,7 @@ func DecodeJWTData(encodedString string) (data.Merchant, error) {
 		user data.Merchant
 	)
 
-	secret := util.MyCmpWorkAround(os.Getenv("JWT_SECRET"), "some-secret")
+	secret := cmp.Or(os.Getenv("JWT_SECRET"), "some-secret")
 
 	key = []byte(secret)
 

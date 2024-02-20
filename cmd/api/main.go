@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -25,7 +26,7 @@ func main() {
 	})
 
 	app.Use(cors.New())
-	app.Use(middleware.CreateSession)
+	app.Use(middleware.LogRequest)
 
 	// routes
 	routes.AuthRoute(app.Group("/auth"))
@@ -37,8 +38,8 @@ func main() {
 	// seed data
 	util.SeedData()
 
-	port := util.MyCmpWorkAround(os.Getenv("PORT"), "8000")
-	host := util.MyCmpWorkAround(os.Getenv("HOST"), "")
+	port := cmp.Or(os.Getenv("PORT"), "8000")
+	host := cmp.Or(os.Getenv("HOST"), "")
 
 	err := app.Listen(host + ":" + port)
 	if err != nil {

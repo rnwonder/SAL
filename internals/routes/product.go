@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"cmp"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rnwonder/SAL/data"
 	"github.com/rnwonder/SAL/internals/middleware"
@@ -21,8 +22,8 @@ func ProductRoute(router fiber.Router) {
 
 func getAllProducts(ctx *fiber.Ctx) error {
 	var products []map[string]interface{}
-	key := util.MyCmpWorkAround(ctx.Query("sortKey"), "createdAt")
-	order := util.MyCmpWorkAround(ctx.Query("sortOrder"), "desc")
+	key := cmp.Or(ctx.Query("sortKey"), "createdAt")
+	order := cmp.Or(ctx.Query("sortOrder"), "desc")
 	searchQuery := ctx.Query("search")
 
 	// Sorting
