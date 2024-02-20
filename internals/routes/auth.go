@@ -33,11 +33,6 @@ func register(ctx *fiber.Ctx) error {
 				"message": "Email already exists",
 			})
 		}
-		if merchant.SkuId == registeringUser.SkuId {
-			return ctx.Status(409).JSON(fiber.Map{
-				"message": "SkuId is already taken",
-			})
-		}
 	}
 
 	password := util.HashPassword(registeringUser.Password)
@@ -45,7 +40,6 @@ func register(ctx *fiber.Ctx) error {
 	newUser := data.Merchant{
 		Email:    registeringUser.Email,
 		Password: password,
-		SkuId:    registeringUser.SkuId,
 		Name:     registeringUser.Name,
 		Id:       uuid.Must(uuid.NewRandom()).String(),
 	}
@@ -56,7 +50,7 @@ func register(ctx *fiber.Ctx) error {
 
 	return ctx.Status(201).JSON(fiber.Map{
 		"message":   "User registered successfully",
-		"user":      user,
+		"user":      util.StructToMap(user),
 		"token":     token,
 		"tokenType": "Bearer",
 		"expiresAt": expiresAt,
@@ -82,7 +76,7 @@ func login(ctx *fiber.Ctx) error {
 				user, token, expiresAt := handlers.LoginUser(&merchant)
 				return ctx.Status(200).JSON(fiber.Map{
 					"message":   "User logged in successfully",
-					"user":      user,
+					"user":      util.StructToMap(user),
 					"token":     token,
 					"tokenType": "Bearer",
 					"expiresAt": expiresAt,

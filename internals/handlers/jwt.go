@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rnwonder/SAL/data"
@@ -31,7 +30,6 @@ func SignDataWithJWT(data *data.Merchant) (string, time.Time) {
 			"name":     data.Name,
 			"Id":       data.Id,
 			"password": data.Password,
-			"skuId":    data.SkuId,
 		},
 	})
 
@@ -74,17 +72,10 @@ func DecodeJWTData(encodedString string) (data.Merchant, error) {
 		}
 	}
 
-	return user, errors.New("User not found")
+	return user, errors.New("user not found")
 }
 
-func LoginUser(user *data.Merchant) (fiber.Map, string, time.Time) {
+func LoginUser(user *data.Merchant) (*data.Merchant, string, time.Time) {
 	token, expiredAt := SignDataWithJWT(user)
-	return fiber.Map{
-		"email":     user.Email,
-		"name":      user.Name,
-		"skuId":     user.SkuId,
-		"id":        user.Id,
-		"createdAt": user.CreatedAt,
-		"updatedAt": user.UpdatedAt,
-	}, token, expiredAt
+	return user, token, expiredAt
 }

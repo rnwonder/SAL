@@ -32,7 +32,6 @@ func Test_login(t *testing.T) {
 				`"name":"Test Merchant"`,
 				`"email":"testMerchant@example.com"`,
 				`"expiresAt"`,
-				`"skuId":"someskuid"`,
 			},
 			body: map[string]interface{}{
 				"email":    "testMerchant@example.com",
@@ -104,7 +103,6 @@ func Test_login(t *testing.T) {
 	data.MerchantData = []data.Merchant{
 		{
 			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:     "someskuid",
 			Name:      "Test Merchant",
 			Email:     "testMerchant@example.com",
 			Password:  password,
@@ -163,13 +161,11 @@ func Test_register(t *testing.T) {
 				`"name":"Test Merchant"`,
 				`"email":"testMerchant@example.com"`,
 				`"expiresAt"`,
-				`"skuId":"someskuid"`,
 			},
 			expectedCode: 201,
 			body: map[string]interface{}{
 				"email":    "testMerchant@example.com",
 				"name":     "Test Merchant",
-				"skuId":    "someskuid",
 				"password": "123456",
 			},
 		},
@@ -183,7 +179,6 @@ func Test_register(t *testing.T) {
 			},
 			body: map[string]interface{}{
 				"name":     "Test Merchant",
-				"skuId":    "someskuid",
 				"password": "123456",
 			},
 		},
@@ -197,21 +192,6 @@ func Test_register(t *testing.T) {
 			},
 			body: map[string]interface{}{
 				"email":    "testMerchant@example.com",
-				"skuId":    "someskuid",
-				"password": "123456",
-			},
-		},
-		{
-			description:  "Register with missing skuId",
-			route:        "/auth/register",
-			expectedCode: 400,
-			contains: []string{
-				`SkuId`,
-				`Needs to implement 'required'`,
-			},
-			body: map[string]interface{}{
-				"email":    "testMerchant@example.com",
-				"name":     "Test Merchant",
 				"password": "123456",
 			},
 		},
@@ -226,18 +206,16 @@ func Test_register(t *testing.T) {
 			body: map[string]interface{}{
 				"email": "testMerchant@example.com",
 				"name":  "Test Merchant",
-				"skuId": "someskuid",
 			},
 		},
 		{
-			description:  "Register with missing email, name, skuId and password",
+			description:  "Register with missing email, name and password",
 			route:        "/auth/register",
 			expectedCode: 400,
 			contains: []string{
 				`Email`,
 				`Needs to implement 'required'`,
 				`Name`,
-				`SkuId`,
 				`Password`,
 			},
 			body: map[string]interface{}{},
@@ -261,21 +239,6 @@ func Test_register(t *testing.T) {
 			body: map[string]interface{}{
 				"email":    "testMerchant2@example.com",
 				"name":     "Test Merchant",
-				"skuId":    "someskuid",
-				"password": "123456",
-			},
-		},
-		{
-			description:  "Register with existing skuId",
-			route:        "/auth/register",
-			expectedCode: 409,
-			contains: []string{
-				`"message":"SkuId is already taken"`,
-			},
-			body: map[string]interface{}{
-				"email":    "testMerchant@example.com",
-				"name":     "Test Merchant",
-				"skuId":    "someskuid2",
 				"password": "123456",
 			},
 		},
@@ -288,7 +251,6 @@ func Test_register(t *testing.T) {
 	data.MerchantData = []data.Merchant{
 		{
 			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:     "someskuid2",
 			Name:      "Test Merchant2",
 			Email:     "testMerchant2@example.com",
 			Password:  password,

@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"github.com/rnwonder/SAL/data"
 	"github.com/rnwonder/SAL/internals/middleware"
 	"github.com/rnwonder/SAL/util"
@@ -21,7 +20,7 @@ func ProductRoute(router fiber.Router) {
 }
 
 func getAllProducts(ctx *fiber.Ctx) error {
-	var products []data.ProductResponse
+	var products []data.Product
 	key := util.MyCmpWorkAround(ctx.Query("sortKey"), "createdAt")
 	order := util.MyCmpWorkAround(ctx.Query("sortOrder"), "desc")
 	searchQuery := ctx.Query("search")
@@ -66,7 +65,7 @@ func getAllProducts(ctx *fiber.Ctx) error {
 	startIndex, endIndex, totalPages, limit, page := util.CalculatePageInfo(ctx.Query("page"), ctx.Query("limit"), len(filteredData))
 
 	for i, product := range filteredData[startIndex:endIndex] {
-		products = append(products, util.ClientProductFormat(product))
+		products = append(products, product)
 		if i == endIndex {
 			break
 		}
@@ -88,7 +87,6 @@ func getAllProducts(ctx *fiber.Ctx) error {
 
 func createAProduct(ctx *fiber.Ctx) error {
 	product := new(data.ProductCreatePayload)
-
 	user := ctx.Locals("user").(data.Merchant)
 
 	if err := ctx.BodyParser(product); err != nil {
@@ -102,7 +100,12 @@ func createAProduct(ctx *fiber.Ctx) error {
 	}
 
 	for _, savedProduct := range data.ProductData {
-		if savedProduct.Name == product.Name && savedProduct.SkuId == user.SkuId {
+		if savedProduct.SkuId == product.SkuId {
+			return ctx.Status(409).JSON(fiber.Map{
+				"message": "Product with this SKU already exists",
+			})
+		}
+		if savedProduct.Name == product.Name && savedProduct.MerchantId == user.Id {
 			return ctx.Status(409).JSON(fiber.Map{
 				"message": "You already have a product with this name",
 			})
@@ -110,20 +113,20 @@ func createAProduct(ctx *fiber.Ctx) error {
 	}
 
 	newProduct := data.Product{
-		Id:          uuid.Must(uuid.NewRandom()).String(),
 		Name:        product.Name,
 		Description: product.Description,
 		Price:       product.Price,
-		SkuId:       user.SkuId,
+		SkuId:       product.SkuId,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
+		MerchantId:  user.Id,
 	}
 
 	data.ProductData = append(data.ProductData, newProduct)
 
 	return ctx.Status(201).JSON(fiber.Map{
 		"message": "Product created successfully",
-		"product": util.ClientProductFormat(newProduct),
+		"product": newProduct,
 	})
 }
 
@@ -131,10 +134,10 @@ func findAProduct(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
 	for _, product := range data.ProductData {
-		if product.Id == id {
+		if product.SkuId == id {
 			return ctx.Status(200).JSON(fiber.Map{
 				"message": "Product fetched successfully",
-				"product": util.ClientProductFormat(product),
+				"product": product,
 			})
 		}
 	}
@@ -160,18 +163,16 @@ func updateAProduct(ctx *fiber.Ctx) error {
 	}
 
 	for i, savedProduct := range data.ProductData {
-		if savedProduct.Id == id && savedProduct.SkuId == user.SkuId {
-
+		if savedProduct.SkuId == id && savedProduct.MerchantId == user.Id {
 			if product.Name != "" {
-				data.ProductData[i].Name = product.Name
-
 				for _, savedProduct := range data.ProductData {
-					if savedProduct.Name == product.Name && savedProduct.SkuId == user.SkuId && savedProduct.Id != id {
+					if savedProduct.Name == product.Name && savedProduct.MerchantId == user.Id && savedProduct.SkuId != id {
 						return ctx.Status(409).JSON(fiber.Map{
 							"message": "You already have a product with this name",
 						})
 					}
 				}
+				data.ProductData[i].Name = product.Name
 			}
 
 			if product.Description != "" {
@@ -181,12 +182,28 @@ func updateAProduct(ctx *fiber.Ctx) error {
 			if product.Price != 0 {
 				data.ProductData[i].Price = product.Price
 			}
+			if product.SkuId != "" {
+
+				for _, savedProduct := range data.ProductData {
+					if savedProduct.SkuId == product.SkuId && savedProduct.SkuId != id {
+						return ctx.Status(409).JSON(fiber.Map{
+							"message": "Product with this SKU already exists",
+						})
+					}
+				}
+				data.ProductData[i].SkuId = product.SkuId
+			}
 
 			data.ProductData[i].UpdatedAt = time.Now()
 
 			return ctx.Status(200).JSON(fiber.Map{
 				"message": "Product updated successfully",
-				"product": util.ClientProductFormat(data.ProductData[i]),
+				"product": data.ProductData[i],
+			})
+		}
+		if savedProduct.SkuId == id && savedProduct.MerchantId != user.Id {
+			return ctx.Status(403).JSON(fiber.Map{
+				"message": "You are not authorized to update this product",
 			})
 		}
 	}
@@ -200,13 +217,13 @@ func deleteAProduct(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(data.Merchant)
 
 	for i, product := range data.ProductData {
-		if user.SkuId == product.SkuId && product.Id == id {
+		if user.Id == product.MerchantId && product.SkuId == id {
 			data.ProductData = append(data.ProductData[:i], data.ProductData[i+1:]...)
 			return ctx.Status(200).JSON(fiber.Map{
 				"message": "Product deleted successfully",
 			})
 		}
-		if user.SkuId != product.SkuId && product.Id == id {
+		if user.Id != product.MerchantId && product.SkuId == id {
 			return ctx.Status(403).JSON(fiber.Map{
 				"message": "You are not authorized to delete this product",
 			})

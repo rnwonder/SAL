@@ -138,8 +138,7 @@ func Test_findAProduct(t *testing.T) {
 
 	data.ProductData = []data.Product{
 		{
-			Id:          "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "arandomskuid",
+			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "A product",
 			Description: "A product description",
 			Price:       100.00,
@@ -220,6 +219,7 @@ func Test_createAProduct(t *testing.T) {
 				"Name":        "A product2",
 				"Description": "A product description",
 				"Price":       100.00,
+				"skuId":       "shaggsas",
 			},
 			isAuth: true,
 		},
@@ -247,6 +247,7 @@ func Test_createAProduct(t *testing.T) {
 				"Name":        "A product",
 				"Description": "A product description",
 				"Price":       100.00,
+				"skuId":       "ghghjgy",
 			},
 			isAuth: true,
 		},
@@ -261,6 +262,22 @@ func Test_createAProduct(t *testing.T) {
 				"Name":        "Car",
 				"Description": "A product description",
 				"Price":       100.00,
+				"skuId":       "ytfgfg",
+			},
+			isAuth: true,
+		},
+		{
+			description:  "Create a product with a skuId that already exists",
+			route:        "/products",
+			expectedCode: 409,
+			contains: []string{
+				`"message":"Product with this SKU already exists"`,
+			},
+			body: map[string]interface{}{
+				"Name":        "Mower",
+				"Description": "A product description",
+				"Price":       100.00,
+				"skuId":       "ytfgfg",
 			},
 			isAuth: true,
 		},
@@ -274,7 +291,6 @@ func Test_createAProduct(t *testing.T) {
 	data.MerchantData = []data.Merchant{
 		{
 			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:     "someskuid",
 			Name:      "Test Merchant",
 			Email:     "testMerchant@example.com",
 			Password:  password,
@@ -285,19 +301,19 @@ func Test_createAProduct(t *testing.T) {
 
 	data.ProductData = []data.Product{
 		{
-			Id:          "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "someskuid",
+			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "A product",
 			Description: "A product description",
+			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
 			Price:       100.00,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 		{
-			Id:          "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "someskuid2",
+			SkuId:       "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "Car",
 			Description: "A product description",
+			MerchantId:  "12rg9f5c-daf5-46bb-b729-4ceb710f794d",
 			Price:       100.00,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
@@ -408,7 +424,6 @@ func Test_deleteAProduct(t *testing.T) {
 	data.MerchantData = []data.Merchant{
 		{
 			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:     "someskuid",
 			Name:      "Test Merchant",
 			Email:     "testMerchant@example.com",
 			Password:  password,
@@ -419,19 +434,19 @@ func Test_deleteAProduct(t *testing.T) {
 
 	data.ProductData = []data.Product{
 		{
-			Id:          "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "someskuid",
+			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "A product",
 			Description: "A product description",
+			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
 			Price:       100.00,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 		{
-			Id:          "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "someskuid2",
+			SkuId:       "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "Car",
 			Description: "A product description",
+			MerchantId:  "12rg9f5c-daf5-46bb-b729-4ceb710f794d",
 			Price:       100.00,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
@@ -552,6 +567,18 @@ func Test_updateAProduct(t *testing.T) {
 			},
 			isAuth: true,
 		},
+		{
+			description:  "Update a product with a skuId that already exists",
+			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
+			expectedCode: 409,
+			contains: []string{
+				`"message":"Product with this SKU already exists"`,
+			},
+			body: map[string]interface{}{
+				"skuId": "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
+			},
+			isAuth: true,
+		},
 	}
 
 	app := fiber.New()
@@ -562,7 +589,6 @@ func Test_updateAProduct(t *testing.T) {
 	data.MerchantData = []data.Merchant{
 		{
 			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:     "someskuid",
 			Name:      "Test Merchant",
 			Email:     "testMerchant@example.com",
 			Password:  password,
@@ -573,28 +599,28 @@ func Test_updateAProduct(t *testing.T) {
 
 	data.ProductData = []data.Product{
 		{
-			Id:          "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "someskuid",
+			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "A product",
 			Description: "A product description",
+			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
 			Price:       100.00,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 		{
-			Id:          "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "someskuid2",
+			SkuId:       "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "Car",
 			Description: "A product description",
+			MerchantId:  "12rg9f5c-daf5-46bb-b729-4ceb710f794d",
 			Price:       100.00,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		},
 		{
-			Id:          "98je9f5c-daf5-46bb-b729-4ceb710f794d",
-			SkuId:       "someskuid",
+			SkuId:       "98je9f5c-daf5-46bb-b729-4ceb710f794d",
 			Name:        "Door",
 			Description: "A product description",
+			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
 			Price:       100.00,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),

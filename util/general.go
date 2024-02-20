@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/url"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -96,26 +97,15 @@ func PrevPage(page int) string {
 	return strconv.Itoa(page - 1)
 }
 
-func ClientProductFormat(product data.Product) data.ProductResponse {
-	return data.ProductResponse{
-		Id:          product.Id,
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		CreatedAt:   product.CreatedAt,
-		UpdatedAt:   product.UpdatedAt,
-	}
-}
-
-func GenerateRandomProducts(numProducts int, SkuId string) []data.Product {
+func GenerateRandomProducts(numProducts int, merchantId string) []data.Product {
 	var products []data.Product
 	nameSet := make(map[string]bool)
 
 	for i := 0; i < numProducts; i++ {
 		name := generateUniqueName(nameSet)
 		products = append(products, data.Product{
-			Id:          uuid.Must(uuid.NewRandom()).String(),
-			SkuId:       SkuId,
+			SkuId:       uuid.Must(uuid.NewRandom()).String(),
+			MerchantId:  merchantId,
 			Name:        name,
 			Description: "Description",
 			Price:       rand.Float32() * 100,
@@ -153,7 +143,6 @@ func GenerateRandomMerchants(numMerchants int) []data.Merchant {
 			Name:      fmt.Sprintf("Merchant%d", i+1),
 			Email:     email,
 			Password:  HashPassword("password"),
-			SkuId:     fmt.Sprintf("SKU%d", i+1),
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		})
@@ -182,7 +171,7 @@ func SeedData() {
 	data.MerchantData = append(data.MerchantData, GenerateRandomMerchants(8)...)
 
 	for _, merchant := range data.MerchantData {
-		data.ProductData = append(data.ProductData, GenerateRandomProducts(4, merchant.SkuId)...)
+		data.ProductData = append(data.ProductData, GenerateRandomProducts(4, merchant.Id)...)
 	}
 }
 
@@ -192,4 +181,22 @@ func EncodeMapToString(data map[string]interface{}) string {
 		values.Add(key, fmt.Sprintf("%v", value))
 	}
 	return values.Encode()
+}
+
+func StructToMap(s interface{}) map[string]interface{} {
+	m := make(map[string]interface{})
+	val := reflect.ValueOf(s)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		key := typ.Field(i).Name
+		// Convert key to lowercase
+		lowerKey := string([]rune(key)[0]+32) + key[1:]
+		m[lowerKey] = field.Interface()
+	}
+	return m
 }
