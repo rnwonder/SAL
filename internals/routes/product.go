@@ -164,6 +164,14 @@ func updateAProduct(ctx *fiber.Ctx) error {
 
 			if product.Name != "" {
 				data.ProductData[i].Name = product.Name
+
+				for _, savedProduct := range data.ProductData {
+					if savedProduct.Name == product.Name && savedProduct.SkuId == user.SkuId && savedProduct.Id != id {
+						return ctx.Status(409).JSON(fiber.Map{
+							"message": "You already have a product with this name",
+						})
+					}
+				}
 			}
 
 			if product.Description != "" {
@@ -196,6 +204,11 @@ func deleteAProduct(ctx *fiber.Ctx) error {
 			data.ProductData = append(data.ProductData[:i], data.ProductData[i+1:]...)
 			return ctx.Status(200).JSON(fiber.Map{
 				"message": "Product deleted successfully",
+			})
+		}
+		if user.SkuId != product.SkuId && product.Id == id {
+			return ctx.Status(403).JSON(fiber.Map{
+				"message": "You are not authorized to delete this product",
 			})
 		}
 	}

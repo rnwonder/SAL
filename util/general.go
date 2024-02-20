@@ -8,6 +8,7 @@ import (
 	"github.com/rnwonder/SAL/data"
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -18,8 +19,7 @@ func JsonStringify(data map[string]interface{}) string {
 		log.Error("Error converting data to json", err)
 		return ""
 	}
-	jsonString := string(jsonData)
-	return jsonString
+	return string(jsonData)
 }
 
 func JsonParse(jsonString string) map[string]interface{} {
@@ -184,4 +184,12 @@ func SeedData() {
 	for _, merchant := range data.MerchantData {
 		data.ProductData = append(data.ProductData, GenerateRandomProducts(4, merchant.SkuId)...)
 	}
+}
+
+func EncodeMapToString(data map[string]interface{}) string {
+	values := url.Values{}
+	for key, value := range data {
+		values.Add(key, fmt.Sprintf("%v", value))
+	}
+	return values.Encode()
 }

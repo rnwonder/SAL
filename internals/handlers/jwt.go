@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rnwonder/SAL/data"
 	"github.com/rnwonder/SAL/util"
@@ -12,7 +11,7 @@ import (
 	"time"
 )
 
-func SignDataWithJWT(data *data.Merchant) string {
+func SignDataWithJWT(data *data.Merchant) (string, time.Time) {
 	var (
 		key []byte
 		t   *jwt.Token
@@ -22,8 +21,10 @@ func SignDataWithJWT(data *data.Merchant) string {
 
 	key = []byte(secret)
 
+	expiresAt := time.Now().Add(time.Hour * 24 * 30)
+
 	t = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"exp": expiresAt.Unix(),
 		"iss": "SAL",
 		"data": map[string]string{
 			"email":    data.Email,
@@ -40,7 +41,7 @@ func SignDataWithJWT(data *data.Merchant) string {
 		log.Error("Error signing token", err)
 	}
 
-	return encodedString
+	return encodedString, expiresAt
 }
 
 func DecodeJWTData(encodedString string) (data.Merchant, error) {
@@ -76,18 +77,8 @@ func DecodeJWTData(encodedString string) (data.Merchant, error) {
 	return user, errors.New("User not found")
 }
 
-func LoginUser(sess *session.Session, user *data.Merchant) (fiber.Map, string) {
-	token := SignDataWithJWT(user)
-	sess.Set("token", token)
-	sess.Set("skuId", user.SkuId)
-	sess.Set("id", user.Id)
-	sess.SetExpiry(time.Hour * 24 * 30)
-	err := sess.Save()
-
-	if err != nil {
-		log.Error("Error saving session", err)
-	}
-
+func LoginUser(user *data.Merchant) (fiber.Map, string, time.Time) {
+	token, expiredAt := SignDataWithJWT(user)
 	return fiber.Map{
 		"email":     user.Email,
 		"name":      user.Name,
@@ -95,5 +86,5 @@ func LoginUser(sess *session.Session, user *data.Merchant) (fiber.Map, string) {
 		"id":        user.Id,
 		"createdAt": user.CreatedAt,
 		"updatedAt": user.UpdatedAt,
-	}, token
+	}, token, expiredAt
 }

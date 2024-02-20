@@ -15,74 +15,157 @@ This is the API for the ShopAnythingLagos project. It is a RESTful API built wit
 ## Endpoints
 
 - ### Auth
-  - Register as a merchant
-    - POST `/auth`
-    - It requires a JSON body with the following fields:
-      - `email` - The email of the merchant - `string`
-      - `password` - The password of the merchant - `string`
-      - `name` - The name of the merchant - `string`
-      - `skuId` - The SKU ID of the merchant - `string`
-    
-  - Login as a merchant
-    - POST `/auth/login`
-    - It requires a JSON body with the following fields:
-      - `email` - The email of the merchant - `string`
-      - `password` - The password of the merchant - `string`
+    - Register as a merchant
+        - **POST** `/auth/register`
+        - **Request Body**
+          ```json
+          {
+            "email": "string",
+            "password": "string",
+            "name": "string",
+            "skuId": "string"
+          }
+          ```
+        - **Response Body**
+          ```json
+          {
+            "message": "string",
+            "token": "string",
+            "user": {
+              "id": "string",
+              "name": "string",
+              "email": "string",
+              "skuId": "string",
+              "createdAt": "string",
+              "updatedAt": "string"
+            },
+            "tokenType": "string",
+            "expiresAt": "string"
+          }
+          ```
+
+    - Login as a merchant
+        - **POST** `/auth/login`
+        - **Request Body**
+          ```json
+          {
+            "email": "string",
+            "password": "string"
+          }
+          ```
+        - **Response Body**
+          ```json
+          {
+            "message": "string",
+             "token": "string",
+            "user": {
+              "id": "string",
+              "name": "string",
+              "email": "string",
+              "skuId": "string",
+              "createdAt": "string",
+              "updatedAt": "string"
+            },
+            "tokenType": "string",
+            "expiresAt": "string"
+          }
+          ```
 
 - ### Products
-  - Get all products
-    - GET `/product`
-    - It is a public route, hence it does not require authentication
-    - Use the `page` and `limit` query parameters to paginate the results
-    - Use search query parameter to search for products
-    - use sortKey and sortOrder query parameters to sort the results
-    - The default value for `page` is 1 and `limit` is 10
-    - The default value for `sortKey` is `createdAt` and `sortOrder` is `desc`
-    - The default value for `search` is an empty string
-    - It returns 
-      - `products` - An array of products 
-      - `message` - A message indicating the success of the request - `string`
-      - `meta` - An object containing pagination information"
-        - `currentPage` - The current page - `number`
-        - `totalPages` - The total number of pages - `number`
-        - `limit` - The limit of products per page - `number`
-        - `totalProducts` - The total number of products - `number`
-        - `nextPage` - The query parameters for the next page - `string`
-        - `prevPage` - The query parameters for the previous page - `string`
-    
-  - Get a single product
-    - GET `/product/:id`
-    - It is a public route, hence it does not require authentication
-    - It requires the `id` of the product as a URL parameter
-    - It returns a single product
-      - `id` - The ID of the product - `string`
-      - `name` - The name of the product - `string`
-      - `description` - The description of the product - `string`
-      - `price` - The price of the product - `number`
-      - `createdAt` - The date the product was created - `string`
-      - `updatedAt` - The date the product was last updated - `string`
+    - Get all products
+        - **GET** `/product`
+        - It is a public route, hence it does not require authentication
+        - Use the `page` and `limit` query parameters to paginate the results
+        - Use `search` query parameter to search for products
+        - Use `sortKey` and `sortOrder` query parameters to sort the results
+        - The default value for `page` is 1 and `limit` is 10
+        - The default value for `sortKey` is `createdAt` and `sortOrder` is `desc`
+        - **Response Body**
+          ```json
+          {
+            "products": [],
+            "message": "string",
+            "meta": {
+              "currentPage": "number",
+              "totalPages": "number",
+              "limit": "number",
+              "totalProducts": "number",
+              "nextPage": "string",
+              "prevPage": "string"
+            }
+          }
+          ```
 
-  - Create a product
-    - POST `/product`
-    - Its an authenticated route, hence it requires a bearer token
-    - It requires a JSON body with the following fields:
-      - `name` - The name of the product - `string`
-      - `description` - The description of the product - `string`
-      - `price` - The price of the product - `number`
-    - It returns the created product
-  
+    - Get a single product
+        - **GET** `/product/:id`
+        - It is a public route, hence it does not require authentication
+        - It requires the `id` of the product as a URL parameter
+        - **Response Body**
+          ```json
+          {
+            "id": "string",
+            "name": "string",
+            "description": "string",
+            "price": "number",
+            "createdAt": "string",
+            "updatedAt": "string"
+          }
+          ```
+
+    - Create a product
+        - **POST** `/product`
+        - Its an authenticated route, hence it requires a bearer token
+        - **Request Body**
+          ```json
+          {
+            "name": "string",
+            "description": "string",
+            "price": "number"
+          }
+          ```
+        - **Response Body**
+          ```json
+          {
+            "id": "string",
+            "name": "string",
+            "description": "string",
+            "price": "number",
+            "createdAt": "string",
+            "updatedAt": "string"
+          }
+          ```
+
     - Update a product
-      - PUT `/product/:id`
-      - Its an authenticated route, hence it requires a bearer token
-      - It requires the `id` of the product as a URL parameter
-      - It requires a JSON body with any of the following fields:
-        - `name` - The name of the product - `string`
-        - `description` - The description of the product - `string`
-        - `price` - The price of the product - `number`
-        - It returns the updated product
-        
+        - **PUT** `/product/:id`
+        - Its an authenticated route, hence it requires a bearer token
+        - It requires the `id` of the product as a URL parameter
+        - **Request Body**
+          ```json
+          {
+            "name": "string", // optional
+            "description": "string", // optional
+            "price": "number" // optional
+          }
+          ```
+        - **Response Body**
+          ```json
+          {
+            "id": "string",
+            "name": "string",
+            "description": "string",
+            "price": "number",
+            "createdAt": "string",
+            "updatedAt": "string"
+          }
+          ```
+
     - Delete a product
-      - DELETE `/product/:id`
-      - Its an authenticated route, hence it requires a bearer token
-      - It requires the `id` of the product as a URL parameter
-      - It returns a message indicating the success of the request
+        - **DELETE** `/product/:id`
+        - Its an authenticated route, hence it requires a bearer token
+        - It requires the `id` of the product as a URL parameter
+        - **Response Body**
+          ```json
+          {
+            "message": "string"
+          }
+          ```
