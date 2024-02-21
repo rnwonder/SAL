@@ -50,7 +50,7 @@ func register(ctx *fiber.Ctx) error {
 
 	return ctx.Status(201).JSON(fiber.Map{
 		"message":   "User registered successfully",
-		"user":      util.KeysToLowerCase(user),
+		"user":      user,
 		"token":     token,
 		"tokenType": "Bearer",
 		"expiresAt": expiresAt,
@@ -76,7 +76,7 @@ func login(ctx *fiber.Ctx) error {
 				user, token, expiresAt := handlers.LoginUser(&merchant)
 				return ctx.Status(200).JSON(fiber.Map{
 					"message":   "User logged in successfully",
-					"user":      util.KeysToLowerCase(user),
+					"user":      user,
 					"token":     token,
 					"tokenType": "Bearer",
 					"expiresAt": expiresAt,

@@ -3,22 +3,13 @@ package data
 import "time"
 
 type Product struct {
-	SkuId       string
-	Name        string
-	Description string
-	Price       float32
-	MerchantId  string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-}
-
-type ProductResponse struct {
-	SkuId       string
-	Name        string
-	Description string
-	Price       float32
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	SkuId       string    `json:"skuId"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Price       float32   `json:"price"`
+	MerchantId  string    `json:"merchantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 type ProductCreatePayload struct {

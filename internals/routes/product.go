@@ -21,7 +21,7 @@ func ProductRoute(router fiber.Router) {
 }
 
 func getAllProducts(ctx *fiber.Ctx) error {
-	var products []map[string]interface{}
+	var products []data.Product
 	key := cmp.Or(ctx.Query("sortKey"), "createdAt")
 	order := cmp.Or(ctx.Query("sortOrder"), "desc")
 	searchQuery := ctx.Query("search")
@@ -66,7 +66,7 @@ func getAllProducts(ctx *fiber.Ctx) error {
 	startIndex, endIndex, totalPages, limit, page := util.CalculatePageInfo(ctx.Query("page"), ctx.Query("limit"), len(filteredData))
 
 	for i, product := range filteredData[startIndex:endIndex] {
-		products = append(products, util.KeysToLowerCase(product))
+		products = append(products, product)
 		if i == endIndex {
 			break
 		}
@@ -127,7 +127,7 @@ func createAProduct(ctx *fiber.Ctx) error {
 
 	return ctx.Status(201).JSON(fiber.Map{
 		"message": "Product created successfully",
-		"product": util.KeysToLowerCase(newProduct),
+		"product": newProduct,
 	})
 }
 
@@ -138,7 +138,7 @@ func findAProduct(ctx *fiber.Ctx) error {
 		if product.SkuId == id {
 			return ctx.Status(200).JSON(fiber.Map{
 				"message": "Product fetched successfully",
-				"product": util.KeysToLowerCase(product),
+				"product": product,
 			})
 		}
 	}
@@ -199,7 +199,7 @@ func updateAProduct(ctx *fiber.Ctx) error {
 
 			return ctx.Status(200).JSON(fiber.Map{
 				"message": "Product updated successfully",
-				"product": util.KeysToLowerCase(data.ProductData[i]),
+				"product": data.ProductData[i],
 			})
 		}
 		if savedProduct.SkuId == id && savedProduct.MerchantId != user.Id {

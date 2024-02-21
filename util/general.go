@@ -10,7 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/url"
-	"reflect"
 	"strconv"
 	"time"
 )
@@ -165,26 +164,4 @@ func EncodeMapToString(data map[string]interface{}) string {
 		values.Add(key, fmt.Sprintf("%v", value))
 	}
 	return values.Encode()
-}
-
-func KeysToLowerCase(s interface{}) map[string]interface{} {
-	m := make(map[string]interface{})
-	val := reflect.ValueOf(s)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
-	typ := val.Type()
-
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		key := typ.Field(i).Name
-		// Convert key to lowercase
-		lowerKey := string([]rune(key)[0]+32) + key[1:]
-
-		if lowerKey == "password" {
-			continue
-		}
-		m[lowerKey] = field.Interface()
-	}
-	return m
 }
