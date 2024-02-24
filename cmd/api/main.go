@@ -6,12 +6,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
+	_ "github.com/rnwonder/SAL/docs"
+	"github.com/rnwonder/SAL/internals/handlers"
 	"github.com/rnwonder/SAL/internals/middleware"
-	"github.com/rnwonder/SAL/internals/routes"
 	"github.com/rnwonder/SAL/util"
 	"os"
 )
+
+// @title           ShopAnythingLagos API
+// @version         1.0
+// @description     This is the ShopAnythingLagos API documentation
+// @host      localhost:4500
+// @BasePath  /
 
 func main() {
 	loadEnvFileError := godotenv.Load("../../.env")
@@ -28,9 +36,14 @@ func main() {
 	app.Use(cors.New())
 	app.Use(middleware.LogRequest)
 
-	// routes
-	routes.AuthRoute(app.Group("/auth"))
-	routes.ProductRoute(app.Group("/product"))
+	products := app.Group("/product")
+	products.Get("/", handlers.GetAllProductsEndpoint)
+	products.Get("/:id", handlers.FindAProductEndpoint)
+	products.Post("/", handlers.CreateProductEndpoint)
+	products.Put("/:id", handlers.UpdateProductEndpoint)
+	products.Delete("/:id", handlers.DeleteProductEndpoint)
+
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	app.Get("/", welcomeToApi)
 	app.Use(notFound)

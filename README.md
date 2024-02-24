@@ -14,67 +14,9 @@ This is the API for the ShopAnythingLagos project. It is a RESTful API built wit
 
 ## Endpoints
 
-- ### Auth
-    - Register as a merchant
-        - **POST** `/auth/register`
-        - **Request Body**
-          ```json
-          {
-            "email": "string",
-            "password": "string",
-            "name": "string",
-            "skuId": "string"
-          }
-          ```
-        - **Response Body**
-          ```json
-          {
-            "message": "string",
-            "token": "string",
-            "user": {
-              "id": "string",
-              "name": "string",
-              "email": "string",
-              "skuId": "string",
-              "createdAt": "string",
-              "updatedAt": "string"
-            },
-            "tokenType": "string",
-            "expiresAt": "string"
-          }
-          ```
-
-    - Login as a merchant
-        - **POST** `/auth/login`
-        - **Request Body**
-          ```json
-          {
-            "email": "string",
-            "password": "string"
-          }
-          ```
-        - **Response Body**
-          ```json
-          {
-            "message": "string",
-             "token": "string",
-            "user": {
-              "id": "string",
-              "name": "string",
-              "email": "string",
-              "skuId": "string",
-              "createdAt": "string",
-              "updatedAt": "string"
-            },
-            "tokenType": "string",
-            "expiresAt": "string"
-          }
-          ```
-
 - ### Products
     - Get all products
         - **GET** `/product`
-        - It is a public route, hence it does not require authentication
         - Use the `page` and `limit` query parameters to paginate the results
         - Use `search` query parameter to search for products
         - Use `sortKey` and `sortOrder` query parameters to sort the results
@@ -98,7 +40,6 @@ This is the API for the ShopAnythingLagos project. It is a RESTful API built wit
 
     - Get a single product
         - **GET** `/product/:id`
-        - It is a public route, hence it does not require authentication
         - It requires the `id` of the product as a URL parameter
         - **Response Body**
           ```json
@@ -113,7 +54,7 @@ This is the API for the ShopAnythingLagos project. It is a RESTful API built wit
           ```
 
     - Create a product
-        - **POST** `/product`
+        - **POST** `/product?skuId=skuId`
         - Its an authenticated route, hence it requires a bearer token
         - **Request Body**
           ```json
@@ -136,15 +77,15 @@ This is the API for the ShopAnythingLagos project. It is a RESTful API built wit
           ```
 
     - Update a product
-        - **PUT** `/product/:id`
+        - **PUT** `/product/:id?skuId=skuId`
         - Its an authenticated route, hence it requires a bearer token
         - It requires the `id` of the product as a URL parameter
         - **Request Body**
           ```json
           {
-            "name": "string", // optional
-            "description": "string", // optional
-            "price": "number" // optional
+            "name": "string", 
+            "description": "string", 
+            "price": "number" 
           }
           ```
         - **Response Body**
@@ -160,7 +101,7 @@ This is the API for the ShopAnythingLagos project. It is a RESTful API built wit
           ```
 
     - Delete a product
-        - **DELETE** `/product/:id`
+        - **DELETE** `/product/:id?skuId=skuId`
         - Its an authenticated route, hence it requires a bearer token
         - It requires the `id` of the product as a URL parameter
         - **Response Body**

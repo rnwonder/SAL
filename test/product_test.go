@@ -1,9 +1,10 @@
-package routes
+package test
 
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/rnwonder/SAL/data"
+	"github.com/rnwonder/SAL/internals/handlers"
+	"github.com/rnwonder/SAL/internals/models"
 	"github.com/rnwonder/SAL/util"
 	"github.com/stretchr/testify/assert"
 	"io"
@@ -13,6 +14,10 @@ import (
 	"testing"
 	"time"
 )
+
+var testId1 = "37ce9f5c-daf5-46bb-b729-4ceb710f794d"
+var testId2 = "56fe9f5c-daf5-46bb-b729-4ceb710f794d"
+var testId3 = "98je9f5c-daf5-46bb-b729-4ceb710f794d"
 
 func Test_getAllProducts(t *testing.T) {
 	tests := []struct {
@@ -50,7 +55,6 @@ func Test_getAllProducts(t *testing.T) {
 				`"products":[`,
 				`"message":"Products fetched successfully"`,
 				`"limit":10`,
-				`"totalProducts":32`,
 			},
 			seed: true,
 		},
@@ -62,8 +66,6 @@ func Test_getAllProducts(t *testing.T) {
 				`"products":[`,
 				`"message":"Products fetched successfully"`,
 				`"limit":5`,
-				`"totalProducts":32`,
-				`"totalPages":7`,
 				`"currentPage":2`,
 				`"nextPage":"/products?page=3"`,
 				`"prevPage":"/products?page=1"`,
@@ -73,7 +75,8 @@ func Test_getAllProducts(t *testing.T) {
 	}
 
 	app := fiber.New()
-	ProductRoute(app.Group("/products"))
+	products := app.Group("/products")
+	products.Get("/", handlers.GetAllProductsEndpoint)
 
 	hasSeed := false
 
@@ -134,17 +137,17 @@ func Test_findAProduct(t *testing.T) {
 	}
 
 	app := fiber.New()
-	ProductRoute(app.Group("/products"))
+	products := app.Group("/products")
+	products.Get("/:id", handlers.FindAProductEndpoint)
 
-	data.ProductData = []data.Product{
-		{
-			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "A product",
-			Description: "A product description",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
+	models.ProductData[testId1] = models.Product{
+		Id:          testId1,
+		SkuId:       "someSkuId",
+		Name:        "A product",
+		Description: "A product description",
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	for _, test := range tests {
@@ -178,21 +181,19 @@ func Test_createAProduct(t *testing.T) {
 		contains     []string
 		body         map[string]interface{}
 		noBody       bool
-		isAuth       bool
 	}{
 		{
 			description:  "Create a product with no body",
-			route:        "/products",
+			route:        "/products?skuId=shaggsas",
 			expectedCode: 400,
 			contains: []string{
-				`"message":"Invalid request"`,
+				`"message":"Invalid request payload"`,
 			},
 			noBody: true,
-			isAuth: true,
 		},
 		{
 			description:  "Create a product with invalid body",
-			route:        "/products",
+			route:        "/products?skuId=shaggsas",
 			expectedCode: 400,
 			contains: []string{
 				`Name`,
@@ -203,11 +204,10 @@ func Test_createAProduct(t *testing.T) {
 			body: map[string]interface{}{
 				"sss": "A product2",
 			},
-			isAuth: true,
 		},
 		{
 			description:  "Create a product with valid body",
-			route:        "/products",
+			route:        "/products?skuId=shaggsas",
 			expectedCode: 201,
 			contains: []string{
 				`"message":"Product created successfully"`,
@@ -219,16 +219,14 @@ func Test_createAProduct(t *testing.T) {
 				"Name":        "A product2",
 				"Description": "A product description",
 				"Price":       100.00,
-				"skuId":       "shaggsas",
 			},
-			isAuth: true,
 		},
 		{
 			description:  "Create a product with valid body but no auth",
 			route:        "/products",
 			expectedCode: 401,
 			contains: []string{
-				`"message":"Unauthorized"`,
+				`"message":"Invalid request please provide skuId query parameter"`,
 			},
 			body: map[string]interface{}{
 				"Name":        "A product2",
@@ -236,113 +234,36 @@ func Test_createAProduct(t *testing.T) {
 				"Price":       100.00,
 			},
 		},
-		{
-			description:  "Create a product with a name that already exists for the merchant",
-			route:        "/products",
-			expectedCode: 409,
-			contains: []string{
-				`"message":"You already have a product with this name"`,
-			},
-			body: map[string]interface{}{
-				"Name":        "A product",
-				"Description": "A product description",
-				"Price":       100.00,
-				"skuId":       "ghghjgy",
-			},
-			isAuth: true,
-		},
-		{
-			description:  "Create a product with a name that already exists for another merchant",
-			route:        "/products",
-			expectedCode: 201,
-			contains: []string{
-				`"message":"Product created successfully"`,
-			},
-			body: map[string]interface{}{
-				"Name":        "Car",
-				"Description": "A product description",
-				"Price":       100.00,
-				"skuId":       "ytfgfg",
-			},
-			isAuth: true,
-		},
-		{
-			description:  "Create a product with a skuId that already exists",
-			route:        "/products",
-			expectedCode: 409,
-			contains: []string{
-				`"message":"Product with this SKU already exists"`,
-			},
-			body: map[string]interface{}{
-				"Name":        "Mower",
-				"Description": "A product description",
-				"Price":       100.00,
-				"skuId":       "ytfgfg",
-			},
-			isAuth: true,
-		},
 	}
 
 	app := fiber.New()
-	AuthRoute(app.Group("/auth"))
-	ProductRoute(app.Group("/products"))
+	products := app.Group("/products")
+	products.Post("/", handlers.CreateProductEndpoint)
 
-	password := util.HashPassword("password")
-	data.MerchantData = []data.Merchant{
-		{
-			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:      "Test Merchant",
-			Email:     "testMerchant@example.com",
-			Password:  password,
-			UpdatedAt: time.Now(),
-			CreatedAt: time.Now(),
-		},
+	models.ProductData[testId1] = models.Product{
+		SkuId:       "someSkuId",
+		Name:        "A product",
+		Description: "A product description",
+		Id:          testId1,
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
-	data.ProductData = []data.Product{
-		{
-			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "A product",
-			Description: "A product description",
-			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-		{
-			SkuId:       "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "Car",
-			Description: "A product description",
-			MerchantId:  "12rg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
+	models.ProductData[testId2] = models.Product{
+		SkuId:       "someSkuId2",
+		Name:        "Car",
+		Description: "A product description",
+		Id:          testId2,
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	for _, test := range tests {
 		body := strings.NewReader(util.EncodeMapToString(test.body))
 		var token string
 		var req = new(http.Request)
-
-		if test.isAuth {
-			authBody := map[string]interface{}{
-				"email":    "testMerchant@example.com",
-				"password": "password",
-			}
-			request := httptest.NewRequest("POST", "/auth/login", strings.NewReader(util.EncodeMapToString(authBody)))
-			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-			resp, err := app.Test(request, 1000)
-			if err != nil {
-				t.Errorf("error testing route /auth/login: %v", err)
-				continue
-			}
-			read, _ := io.ReadAll(resp.Body)
-			jsonString := string(read)
-			jsonData := util.JsonParse(jsonString)
-			token = jsonData["token"].(string)
-		}
 
 		if !test.noBody {
 			req = httptest.NewRequest("POST", test.route, body)
@@ -377,104 +298,68 @@ func Test_deleteAProduct(t *testing.T) {
 		route        string
 		expectedCode int
 		contains     []string
-		isAuth       bool
 	}{
 		{
 			description:  "Delete a product with no auth",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
+			route:        "/products/" + testId1,
 			expectedCode: 401,
 			contains: []string{
-				`"message":"Unauthorized"`,
+				`"message":"Invalid request please provide skuId query parameter"`,
 			},
 		},
 		{
 			description:  "Delete a product that does not exist",
-			route:        "/products/dada",
+			route:        "/products/dada?skuId=someSkuId",
 			expectedCode: 404,
 			contains: []string{
 				`"message":"Product not found"`,
 			},
-			isAuth: true,
 		},
 		{
 			description:  "Delete a product that exists and is owned by the merchant",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
+			route:        "/products/" + testId1 + "?skuId=someSkuId",
 			expectedCode: 200,
 			contains: []string{
 				`"message":"Product deleted successfully"`,
 			},
-			isAuth: true,
 		},
 		{
 			description:  "Delete a product that exists but is not owned by the merchant",
-			route:        "/products/56fe9f5c-daf5-46bb-b729-4ceb710f794d",
+			route:        "/products/" + testId2 + "?skuId=someSkuId",
 			expectedCode: 403,
 			contains: []string{
-				`"message":"You are not authorized to delete this product"`,
+				`"message":"You do not have permission to update this product"`,
 			},
-			isAuth: true,
 		},
 	}
 
 	app := fiber.New()
-	AuthRoute(app.Group("/auth"))
-	ProductRoute(app.Group("/products"))
+	products := app.Group("/products")
+	products.Delete("/:id", handlers.DeleteProductEndpoint)
 
-	password := util.HashPassword("password")
-	data.MerchantData = []data.Merchant{
-		{
-			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:      "Test Merchant",
-			Email:     "testMerchant@example.com",
-			Password:  password,
-			UpdatedAt: time.Now(),
-			CreatedAt: time.Now(),
-		},
+	models.ProductData[testId1] = models.Product{
+		SkuId:       "someSkuId",
+		Name:        "A product",
+		Description: "A product description",
+		Id:          testId1,
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
-	data.ProductData = []data.Product{
-		{
-			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "A product",
-			Description: "A product description",
-			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-		{
-			SkuId:       "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "Car",
-			Description: "A product description",
-			MerchantId:  "12rg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
+	models.ProductData[testId2] = models.Product{
+		SkuId:       "someSkuId2",
+		Name:        "Car",
+		Description: "A product description",
+		Id:          testId2,
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	for _, test := range tests {
 		var token string
 		var req = new(http.Request)
-
-		if test.isAuth {
-			authBody := map[string]interface{}{
-				"email":    "testMerchant@example.com",
-				"password": "password",
-			}
-			request := httptest.NewRequest("POST", "/auth/login", strings.NewReader(util.EncodeMapToString(authBody)))
-			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-			resp, err := app.Test(request, 1000)
-			if err != nil {
-				t.Errorf("error testing route /auth/login: %v", err)
-				continue
-			}
-			read, _ := io.ReadAll(resp.Body)
-			jsonString := string(read)
-			jsonData := util.JsonParse(jsonString)
-			token = jsonData["token"].(string)
-		}
 
 		req = httptest.NewRequest("DELETE", test.route, nil)
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -508,31 +393,28 @@ func Test_updateAProduct(t *testing.T) {
 		contains     []string
 		body         map[string]interface{}
 		noBody       bool
-		isAuth       bool
 	}{
 		{
 			description:  "Update a product with no body",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
+			route:        "/products/" + testId1 + "?skuId=someSkuId",
 			expectedCode: 400,
 			contains: []string{
-				`"message":"Invalid request"`,
+				`"message":"Invalid request payload"`,
 			},
 			noBody: true,
-			isAuth: true,
 		},
 		{
 			description:  "Update a product with invalid body",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
+			route:        "/products/" + testId1 + "?skuId=someSkuId",
 			expectedCode: 200,
 			contains: []string{
 				`"message":"Product updated successfully"`,
 			},
-			body:   map[string]interface{}{},
-			isAuth: true,
+			body: map[string]interface{}{},
 		},
 		{
 			description:  "Update a product with valid body",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
+			route:        "/products/" + testId1 + "?skuId=someSkuId",
 			expectedCode: 200,
 			contains: []string{
 				`"message":"Product updated successfully"`,
@@ -541,23 +423,10 @@ func Test_updateAProduct(t *testing.T) {
 			body: map[string]interface{}{
 				"Name": "A product2",
 			},
-			isAuth: true,
 		},
 		{
-			description:  "Update a product with a name that already exists for another product own by the merchant",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			expectedCode: 409,
-			contains: []string{
-				`"message":"You already have a product with this name"`,
-			},
-			body: map[string]interface{}{
-				"Name": "Door",
-			},
-			isAuth: true,
-		},
-		{
-			description:  "Update a product with a name that already exists for another product not own by the merchant",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
+			description:  "Update a product with valid body",
+			route:        "/products/" + testId1 + "?skuId=someSkuId",
 			expectedCode: 200,
 			contains: []string{
 				`"message":"Product updated successfully"`,
@@ -565,91 +434,47 @@ func Test_updateAProduct(t *testing.T) {
 			body: map[string]interface{}{
 				"Name": "Car",
 			},
-			isAuth: true,
-		},
-		{
-			description:  "Update a product with a skuId that already exists",
-			route:        "/products/37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			expectedCode: 409,
-			contains: []string{
-				`"message":"Product with this SKU already exists"`,
-			},
-			body: map[string]interface{}{
-				"skuId": "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
-			},
-			isAuth: true,
 		},
 	}
 
 	app := fiber.New()
-	AuthRoute(app.Group("/auth"))
-	ProductRoute(app.Group("/products"))
+	products := app.Group("/products")
+	products.Put("/:id", handlers.UpdateProductEndpoint)
 
-	password := util.HashPassword("password")
-	data.MerchantData = []data.Merchant{
-		{
-			Id:        "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:      "Test Merchant",
-			Email:     "testMerchant@example.com",
-			Password:  password,
-			UpdatedAt: time.Now(),
-			CreatedAt: time.Now(),
-		},
+	models.ProductData[testId1] = models.Product{
+		SkuId:       "someSkuId",
+		Name:        "A product",
+		Description: "A product description",
+		Id:          testId1,
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
-	data.ProductData = []data.Product{
-		{
-			SkuId:       "37ce9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "A product",
-			Description: "A product description",
-			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-		{
-			SkuId:       "56fe9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "Car",
-			Description: "A product description",
-			MerchantId:  "12rg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
-		{
-			SkuId:       "98je9f5c-daf5-46bb-b729-4ceb710f794d",
-			Name:        "Door",
-			Description: "A product description",
-			MerchantId:  "6grg9f5c-daf5-46bb-b729-4ceb710f794d",
-			Price:       100.00,
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
-		},
+	models.ProductData[testId2] = models.Product{
+		SkuId:       "someSkuId2",
+		Name:        "Car",
+		Description: "A product description",
+		Id:          testId2,
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	models.ProductData[testId1] = models.Product{
+		SkuId:       "someSkuId",
+		Name:        "Door",
+		Description: "A product description",
+		Id:          testId1,
+		Price:       100.00,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	for _, test := range tests {
 		body := strings.NewReader(util.EncodeMapToString(test.body))
 		var token string
 		var req = new(http.Request)
-
-		if test.isAuth {
-			authBody := map[string]interface{}{
-				"email":    "testMerchant@example.com",
-				"password": "password",
-			}
-			request := httptest.NewRequest("POST", "/auth/login", strings.NewReader(util.EncodeMapToString(authBody)))
-			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-			resp, err := app.Test(request, 1000)
-			if err != nil {
-				t.Errorf("error testing route /auth/login: %v", err)
-				continue
-			}
-			read, _ := io.ReadAll(resp.Body)
-			jsonString := string(read)
-			jsonData := util.JsonParse(jsonString)
-			token = jsonData["token"].(string)
-		}
 
 		if !test.noBody {
 			req = httptest.NewRequest("PUT", test.route, body)

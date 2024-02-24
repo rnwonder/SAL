@@ -1,0 +1,9 @@
+basePath: /
+host: localhost:4500
+info:
+  contact: {}
+  description: This is the ShopAnythingLagos API documentation
+  title: ShopAnythingLagos API
+  version: "1.0"
+paths: {}
+swagger: "2.0"
