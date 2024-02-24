@@ -11,7 +11,6 @@ import (
 	_ "github.com/rnwonder/SAL/docs"
 	"github.com/rnwonder/SAL/internals/handlers"
 	"github.com/rnwonder/SAL/internals/middleware"
-	"github.com/rnwonder/SAL/util"
 	"os"
 )
 
@@ -47,9 +46,6 @@ func main() {
 
 	app.Get("/", welcomeToApi)
 	app.Use(notFound)
-
-	// seed data
-	util.SeedData()
 
 	port := cmp.Or(os.Getenv("PORT"), "8000")
 	host := cmp.Or(os.Getenv("HOST"), "")

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// GetAllProducts Get all products
+// GetAllProductsEndpoint Get all products
 // @Summary Get all products
 // @Description Get all products in the store
 // @Tags Product
@@ -70,6 +70,13 @@ func GetAllProductsEndpoint(ctx *fiber.Ctx) error {
 	})
 }
 
+// FindAProductEndpoint Get a product
+// @Summary Get a product
+// @Description Get a product in the store
+// @Tags Product
+// @Success 200 {object} OneProductResponse
+// @Router /product/:id [get]
+
 func FindAProductEndpoint(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	product, ok := models.FindProductById(id)
@@ -85,6 +92,13 @@ func FindAProductEndpoint(ctx *fiber.Ctx) error {
 		Product: product,
 	})
 }
+
+// CreateProductEndpoint Create a product
+// @Summary Create a product
+// @Description Create a product in the store
+// @Tags Product
+// @Success 200 {object} OneProductResponse
+// @Router /product [post]
 
 func CreateProductEndpoint(ctx *fiber.Ctx) error {
 	body := new(types.ProductCreatePayload)
@@ -123,6 +137,13 @@ func CreateProductEndpoint(ctx *fiber.Ctx) error {
 		Product: newProduct,
 	})
 }
+
+// UpdateProductEndpoint Update a product
+// @Summary Update a product
+// @Description Update a product in the store
+// @Tags Product
+// @Success 200 {object} OneProductResponse
+// @Router /product/:id [put]
 
 func UpdateProductEndpoint(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
@@ -178,6 +199,13 @@ func UpdateProductEndpoint(ctx *fiber.Ctx) error {
 		Product: product,
 	})
 }
+
+// DeleteProductEndpoint Delete a product
+// @Summary Delete a product
+// @Description Delete a product in the store
+// @Tags Product
+// @Success 200 {object} MessageResponse
+// @Router /product/:id [delete]
 
 func DeleteProductEndpoint(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
